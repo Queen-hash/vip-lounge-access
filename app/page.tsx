@@ -25,6 +25,10 @@ export default function PreLander() {
       (window as any).fbq('track', 'Lead');
     }
 
+    if (typeof window !== 'undefined' && (window as any).ttq) {
+      (window as any).ttq.track('SubmitForm');
+    }
+
     setTimeout(() => {
       window.location.href = "https://dewa76.shop/mobile/index.php?page=daftar";
     }, 300);

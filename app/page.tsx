@@ -1,15 +1,30 @@
 "use client";
 
+import { useState } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
+
 export default function PreLander() {
+  // State untuk menyimpan status reCAPTCHA
+  const [isVerified, setIsVerified] = useState(false);
   
-  // Fungsi ini hanya dieksekusi jika ada interaksi KLIK dari manusia
+  // Fungsi ini dipanggil saat reCAPTCHA berhasil dicentang
+  const handleCaptchaChange = (value: string | null) => {
+    if (value) {
+      setIsVerified(true);
+    } else {
+      setIsVerified(false); // Kalau expired atau batal dicentang
+    }
+  };
+
   const handleYes = () => {
+    // Keamanan ganda: Tolak klik jika belum centang
+    if (!isVerified) return;
+
     // 1. Tembak laporan ke FB bahwa ada target potensial ("Lead")
     if (typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'Lead');
     }
 
-    // 2. Beri jeda 300 milidetik agar laporan Pixel terkirim dulu, baru lempar ke form daftar
     setTimeout(() => {
       window.location.href = "https://dewa76.shop/mobile/index.php?page=daftar";
     }, 300);
@@ -31,10 +46,19 @@ export default function PreLander() {
         </div>
 
         <h1 className="text-2xl font-bold mb-4">Peringatan Akses</h1>
-        <p className="text-zinc-400 mb-8 text-sm leading-relaxed">
+        <p className="text-zinc-400 mb-6 text-sm leading-relaxed">
           Halaman ini berisi konten yang dikhususkan bagi pengunjung berusia 18+. 
           Dengan melanjutkan, Anda mengonfirmasi bahwa Anda memenuhi syarat usia minimum.
         </p>
+
+        {/* KOTAK RECAPTCHA */}
+        <div className="flex justify-center mb-6 overflow-hidden">
+          <ReCAPTCHA
+            sitekey="6Lcl7NUtAAAAAA2o9BV27HbcSJ2Y7Qa1uZQjutLE"
+            onChange={handleCaptchaChange}
+            theme="dark"
+          />
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
           <button 
@@ -44,10 +68,15 @@ export default function PreLander() {
             Tutup
           </button>
           
-          {/* Tombol pemicu redirect - Tidak terbaca sebagai link oleh Bot */}
+          {/* Tombol dinamis: Redup kalau belum dicentang, Terang kalau sudah dicentang */}
           <button 
             onClick={handleYes}
-            className="flex-1 px-6 py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20"
+            disabled={!isVerified}
+            className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              isVerified 
+                ? "bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-500/20 cursor-pointer" 
+                : "bg-red-900/40 text-white/40 cursor-not-allowed"
+            }`}
           >
             Ya, Lanjutkan
           </button>
